@@ -15,6 +15,7 @@ from .exceptions import TgtgAPIError, TgtgLoginError, TgtgPollingError
 
 BASE_URL = "https://apptoogoodtogo.com/api/"
 API_ITEM_ENDPOINT = "item/v8/"
+FAVORITE_ITEM_ENDPOINT = "user/favorite/v1/{}/update"
 BASE_URL_ADYEN = "https://checkoutshopper-live.adyen.com/"
 AUTH_BY_EMAIL_ENDPOINT = "auth/v3/authByEmail"
 AUTH_POLLING_ENDPOINT = "auth/v3/authByRequestPollingId"
@@ -320,14 +321,14 @@ class TgtgClient:
             timeout=self.timeout,
         )
         if response.status_code == HTTPStatus.OK:
-            return response.json()["mobile_bucket"]["items"]
+            return response.json().get("mobile_bucket", {}).get("items", [])
         else:
             raise TgtgAPIError(response.status_code, response.content)
 
     def set_favorite(self, item_id, is_favorite):
         self.login()
         response = self.session.post(
-            urljoin(self._get_url(API_ITEM_ENDPOINT), f"{item_id}/setFavorite"),
+            self._get_url(FAVORITE_ITEM_ENDPOINT.format(item_id)),
             headers=self._headers,
             json={"is_favorite": is_favorite},
             proxies=self.proxies,

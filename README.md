@@ -13,11 +13,11 @@ Handle:
 - create an account (`/api/auth/vX/signUpByEmail`)
 - login (`/api/auth/vX/authByEmail`)
 - refresh token (`/api/auth/vX/token/refresh`)
-- list stores (`/api/item/`)
-- get a store (`/api/item/:id`)
-- get favorites (`/api/discover/v1/bucket`)
-- set favorite (`/api/item/:id/setFavorite`)
-- create an order (`/api/order/vX/create/`)
+- list stores (`/api/item/vX`)
+- get a store (`/api/item/vX/:id`)
+- get favorites (`/api/discover/vX/bucket`)
+- set favorite (`/api/user/favorite/vX/:id/update`)
+- create an order (`/api/order/vX/create/:id`)
 - abort an order (`/api/order/vX/:id/abort`)
 - get the status of an order (`/api/order/vX/:id/status`)
 - get active orders (`/api/order/vX/active`)
@@ -91,7 +91,7 @@ print(items)
     {
         "item": {
             "item_id": "64346",
-            "price": {"code": "EUR", "minor_units": 499, "decimals": 2},
+            "item_price": {"code": "EUR", "minor_units": 499, "decimals": 2},
             "sales_taxes": [],
             "tax_amount": {"code": "EUR", "minor_units": 0, "decimals": 2},
             "price_excluding_taxes": {"code": "EUR", "minor_units": 499, "decimals": 2},

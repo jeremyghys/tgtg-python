@@ -8,8 +8,10 @@ from tgtg import (
     AUTH_POLLING_ENDPOINT,
     BASE_URL,
     REFRESH_ENDPOINT,
+    TgtgClient,
 )
 
+from .constants import tgtg_client_fake_tokens
 
 @pytest.fixture(scope="function")
 def auth_by_email_response():
@@ -47,3 +49,7 @@ def refresh_tokens_response():
         status=200,
         adding_headers={"set-cookie": "sweet sweet cookie"},
     )
+
+@pytest.fixture(scope="function")
+def client(refresh_tokens_response):
+    yield TgtgClient(**tgtg_client_fake_tokens)
