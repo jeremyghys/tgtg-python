@@ -448,7 +448,7 @@ class TgtgClient:
         else:
             raise TgtgAPIError(response.status_code, response.content)
 
-    def pay_order(self, order_id, card_data: dict[str, str]):
+    def pay_order(self, order_id):
         self.login()
         headers = {
             "User-Agent": USER_AGENTS[2],
