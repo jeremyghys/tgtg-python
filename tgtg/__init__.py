@@ -471,7 +471,6 @@ class TgtgClient:
                 "merchantId": "QCXN3T2QEBNNW",
                 "intent": "authorize",
             },
-            "threeDS2SdkVersion": "2.2.10",
         }
 
         inner_payload_str = json.dumps(inner_payload).replace("/", "\/")
@@ -513,5 +512,19 @@ class TgtgClient:
         )
         if response.status_code == HTTPStatus.OK:
             return response.json()
+        else:
+            raise TgtgAPIError(response.status_code, response.content)
+        
+    def get_payment_paypal_url(self, payment_id: str):
+        self.login()
+        time.sleep(2)
+        response = self.session.post(
+            self._get_url(PAYMENT_STATUS_ENDPOINT.format(payment_id)),
+            headers=self._headers,
+            proxies=self.proxies,
+            timeout=self.timeout,
+        )
+        if response.status_code == HTTPStatus.OK:
+            return response.json()["url"]
         else:
             raise TgtgAPIError(response.status_code, response.content)
