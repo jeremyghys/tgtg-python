@@ -525,6 +525,8 @@ class TgtgClient:
             timeout=self.timeout,
         )
         if response.status_code == HTTPStatus.OK:
-            return response.json()["url"]
+            sortie = response.json()["payload"]
+            sortie2 = json.loads(sortie)
+            return sortie2['url']
         else:
             raise TgtgAPIError(response.status_code, response.content)
