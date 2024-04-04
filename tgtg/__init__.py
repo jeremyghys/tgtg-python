@@ -465,7 +465,12 @@ class TgtgClient:
         enc.adyen_version = "_0_1_1"
 
         inner_payload = {
-            "paymentMethodType": "paypal",
+            "type": "paypal",
+            "name": "Paypal",
+            "configuration": {
+                "merchantId": "QCXN3T2QEBNNW",
+                "intent": "authorize",
+            },
             "threeDS2SdkVersion": "2.2.10",
         }
 
