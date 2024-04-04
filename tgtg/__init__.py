@@ -463,19 +463,9 @@ class TgtgClient:
 
         enc = encryptor(ADYEN_KEY)
         enc.adyen_version = "_0_1_1"
-        card = enc.encrypt_card(
-            card=card_data["card"],
-            cvv=card_data["cvv"],
-            month=card_data["month"],
-            year=card_data["year"],
-        )
 
         inner_payload = {
-            "type": "scheme",
-            "encryptedCardNumber": card["card"],
-            "encryptedExpiryMonth": card["month"],
-            "encryptedExpiryYear": card["year"],
-            "encryptedSecurityCode": card["cvv"],
+            "paymentMethodType": "paypal",
             "threeDS2SdkVersion": "2.2.10",
         }
 
@@ -484,7 +474,7 @@ class TgtgClient:
             "authorization": {
                 "authorization_payload": {
                     "payload": inner_payload_str,
-                    "payment_type": "CREDITCARD",
+                    "payment_type": "PAYPAL",
                     "save_payment_method": False,
                     "type": "adyenAuthorizationPayload",
                 },
