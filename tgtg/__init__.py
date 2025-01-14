@@ -27,7 +27,7 @@ CREATE_ORDER_ENDPOINT = "order/v8/create/"
 ABORT_ORDER_ENDPOINT = "order/v8/{}/abort"
 ORDER_STATUS_ENDPOINT = "order/v8/{}/status"
 API_BUCKET_ENDPOINT = "discover/v1/bucket"
-PAY_ORDER_ENDPOINT = "order/v8/{}/pay"
+PAY_ORDER_ENDPOINT = "order/v7/{}/pay"
 PAYMENT_STATUS_ENDPOINT = "payment/v3/{}"
 ADYEN_KEY_ENDPOINT = (
     "checkoutshopper/v1/clientKeys/live_VPX45BIMLFAIVARYVKEDNC7OXIFBRQZ5"
