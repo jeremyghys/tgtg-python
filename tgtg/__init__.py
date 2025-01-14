@@ -17,22 +17,22 @@ BASE_URL = "https://apptoogoodtogo.com/api/"
 API_ITEM_ENDPOINT = "item/v8/"
 FAVORITE_ITEM_ENDPOINT = "user/favorite/v1/{}/update"
 BASE_URL_ADYEN = "https://checkoutshopper-live.adyen.com/"
-AUTH_BY_EMAIL_ENDPOINT = "auth/v3/authByEmail"
-AUTH_POLLING_ENDPOINT = "auth/v3/authByRequestPollingId"
-SIGNUP_BY_EMAIL_ENDPOINT = "auth/v3/signUpByEmail"
-REFRESH_ENDPOINT = "auth/v3/token/refresh"
-ACTIVE_ORDER_ENDPOINT = "order/v7/active"
-INACTIVE_ORDER_ENDPOINT = "order/v7/inactive"
-CREATE_ORDER_ENDPOINT = "order/v7/create/"
-ABORT_ORDER_ENDPOINT = "order/v7/{}/abort"
-ORDER_STATUS_ENDPOINT = "order/v7/{}/status"
+AUTH_BY_EMAIL_ENDPOINT = "auth/v5/authByEmail"
+AUTH_POLLING_ENDPOINT = "auth/v5/authByRequestPollingId"
+SIGNUP_BY_EMAIL_ENDPOINT = "auth/v5/signUpByEmail"
+REFRESH_ENDPOINT = "auth/v5/token/refresh"
+ACTIVE_ORDER_ENDPOINT = "order/v8/active"
+INACTIVE_ORDER_ENDPOINT = "order/v8/inactive"
+CREATE_ORDER_ENDPOINT = "order/v8/create/"
+ABORT_ORDER_ENDPOINT = "order/v8/{}/abort"
+ORDER_STATUS_ENDPOINT = "order/v8/{}/status"
 API_BUCKET_ENDPOINT = "discover/v1/bucket"
-PAY_ORDER_ENDPOINT = "order/v7/{}/pay"
+PAY_ORDER_ENDPOINT = "order/v8/{}/pay"
 PAYMENT_STATUS_ENDPOINT = "payment/v3/{}"
 ADYEN_KEY_ENDPOINT = (
     "checkoutshopper/v1/clientKeys/live_VPX45BIMLFAIVARYVKEDNC7OXIFBRQZ5"
 )
-DEFAULT_APK_VERSION = "22.5.5"
+DEFAULT_APK_VERSION = "24.11.0"
 USER_AGENTS = [
     "TGTG/{} Dalvik/2.1.0 (Linux; U; Android 9; Nexus 5 Build/M4B30Z)",
     "TGTG/{} Dalvik/2.1.0 (Linux; U; Android 10; SM-G935F Build/NRD90M)",
@@ -50,7 +50,6 @@ class TgtgClient:
         email=None,
         access_token=None,
         refresh_token=None,
-        user_id=None,
         user_agent=None,
         language="en-GB",
         proxies=None,
@@ -66,7 +65,6 @@ class TgtgClient:
 
         self.access_token = access_token
         self.refresh_token = refresh_token
-        self.user_id = user_id
         self.cookie = cookie
 
         self.last_time_token_refreshed = last_time_token_refreshed
@@ -100,7 +98,6 @@ class TgtgClient:
         return {
             "access_token": self.access_token,
             "refresh_token": self.refresh_token,
-            "user_id": self.user_id,
             "cookie": self.cookie,
         }
 
@@ -121,7 +118,7 @@ class TgtgClient:
 
     @property
     def _already_logged(self):
-        return bool(self.access_token and self.refresh_token and self.user_id)
+        return bool(self.access_token and self.refresh_token)
 
     def _refresh_token(self):
         if (
@@ -147,15 +144,9 @@ class TgtgClient:
             raise TgtgAPIError(response.status_code, response.content)
 
     def login(self):
-        if not (
-            self.email
-            or self.access_token
-            and self.refresh_token
-            and self.user_id
-            and self.cookie
-        ):
+        if not (self.email or self.access_token and self.refresh_token and self.cookie):
             raise TypeError(
-                "You must provide at least email or access_token, refresh_token, user_id and cookie"
+                "You must provide at least email or access_token, refresh_token and cookie"
             )
         if self._already_logged:
             self._refresh_token()
@@ -215,7 +206,6 @@ class TgtgClient:
                 self.access_token = login_response["access_token"]
                 self.refresh_token = login_response["refresh_token"]
                 self.last_time_token_refreshed = datetime.datetime.now()
-                self.user_id = login_response["startup_data"]["user"]["user_id"]
                 self.cookie = response.headers["Set-Cookie"]
                 return
             else:
@@ -253,7 +243,6 @@ class TgtgClient:
 
         # fields are sorted like in the app
         data = {
-            "user_id": self.user_id,
             "origin": {"latitude": latitude, "longitude": longitude},
             "radius": radius,
             "page_size": page_size,
@@ -286,7 +275,7 @@ class TgtgClient:
         response = self.session.post(
             urljoin(self._get_url(API_ITEM_ENDPOINT), str(item_id)),
             headers=self._headers,
-            json={"user_id": self.user_id, "origin": None},
+            json={"origin": None},
             proxies=self.proxies,
             timeout=self.timeout,
         )
@@ -309,7 +298,6 @@ class TgtgClient:
         data = {
             "origin": {"latitude": latitude, "longitude": longitude},
             "radius": radius,
-            "user_id": self.user_id,
             "paging": {"page": page, "size": page_size},
             "bucket": {"filler_type": "Favorites"},
         }
@@ -413,9 +401,7 @@ class TgtgClient:
             self.access_token = response.json()["login_response"]["access_token"]
             self.refresh_token = response.json()["login_response"]["refresh_token"]
             self.last_time_token_refreshed = datetime.datetime.now()
-            self.user_id = response.json()["login_response"]["startup_data"]["user"][
-                "user_id"
-            ]
+            
             return self
         else:
             raise TgtgAPIError(response.status_code, response.content)
@@ -425,7 +411,7 @@ class TgtgClient:
         response = self.session.post(
             self._get_url(ACTIVE_ORDER_ENDPOINT),
             headers=self._headers,
-            json={"user_id": self.user_id},
+            json={},
             proxies=self.proxies,
             timeout=self.timeout,
         )
@@ -439,7 +425,7 @@ class TgtgClient:
         response = self.session.post(
             self._get_url(INACTIVE_ORDER_ENDPOINT),
             headers=self._headers,
-            json={"paging": {"page": page, "size": page_size}, "user_id": self.user_id},
+            json={"paging": {"page": page, "size": page_size}},
             proxies=self.proxies,
             timeout=self.timeout,
         )
