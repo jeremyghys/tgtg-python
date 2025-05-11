@@ -33,11 +33,9 @@ PAYMENT_STATUS_ENDPOINT = "payment/v3/{}"
 ADYEN_KEY_ENDPOINT = (
     "checkoutshopper/v1/clientKeys/live_VPX45BIMLFAIVARYVKEDNC7OXIFBRQZ5"
 )
-DEFAULT_APK_VERSION = "24.11.0"
+DEFAULT_APK_VERSION = "25.4.10"
 USER_AGENTS = [
-    "TGTG/{} Dalvik/2.1.0 (Linux; U; Android 9; Nexus 5 Build/M4B30Z)",
-    "TGTG/{} Dalvik/2.1.0 (Linux; U; Android 10; SM-G935F Build/NRD90M)",
-    "TGTG/{} Dalvik/2.1.0 (Linux; Android 12; SM-G920V Build/MMB29K)",
+    "TooGoodToGo/25.4.10 (14594521948.134.1) (iPhone/Unknown; iOS 18.4.1; Scale/3.00/iOS)"
 ]
 DEFAULT_ACCESS_TOKEN_LIFETIME = 3600 * 4  # 4 hours
 MAX_POLLING_TRIES = 24  # 24 * POLLING_WAIT_TIME = 2 minutes
@@ -52,7 +50,7 @@ class TgtgClient:
         access_token=None,
         refresh_token=None,
         user_agent=None,
-        language="en-GB",
+        language="fr-FR",
         proxies=None,
         timeout=None,
         last_time_token_refreshed=None,
@@ -70,7 +68,7 @@ class TgtgClient:
 
         self.last_time_token_refreshed = last_time_token_refreshed
         self.access_token_lifetime = access_token_lifetime
-        self.correlation_id = str(uuid.uuid4())
+        self.correlation_id = None
 
         self.device_type = device_type
 
@@ -83,7 +81,7 @@ class TgtgClient:
 
     def _get_user_agent(self):
         try:
-            self.version = get_last_apk_version()
+            self.version = DEFAULT_APK_VERSION
         except Exception:
             self.version = DEFAULT_APK_VERSION
             sys.stdout.write("Failed to get last version\n")
@@ -113,6 +111,8 @@ class TgtgClient:
             "user-agent": self.user_agent,
             "x-correlation-id": self.correlation_id,
         }
+        if self.correlation_id:
+            headers["x-correlation-id"] = self.correlation_id
         if self.cookie:
             headers["Cookie"] = self.cookie
         if self.access_token:
@@ -130,7 +130,8 @@ class TgtgClient:
             <= self.access_token_lifetime
         ):
             return
-
+        correlation_id = str(self.correlation_id)
+        self.correlation_id = None
         response = self.session.post(
             self._get_url(REFRESH_ENDPOINT),
             json={"refresh_token": self.refresh_token},
@@ -138,6 +139,10 @@ class TgtgClient:
             proxies=self.proxies,
             timeout=self.timeout,
         )
+        if correlation_id is None:
+            self.correlation_id = str(uuid.uuid4())
+        else:
+            self.correlation_id = correlation_id
         if response.status_code == HTTPStatus.OK:
             self.access_token = response.json()["access_token"]
             self.refresh_token = response.json()["refresh_token"]
@@ -210,6 +215,7 @@ class TgtgClient:
                 self.refresh_token = login_response["refresh_token"]
                 self.last_time_token_refreshed = datetime.datetime.now()
                 self.cookie = response.headers["Set-Cookie"]
+                self.correlation_id = str(uuid.uuid4())
                 return
             else:
                 if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
@@ -404,7 +410,7 @@ class TgtgClient:
             self.access_token = response.json()["login_response"]["access_token"]
             self.refresh_token = response.json()["login_response"]["refresh_token"]
             self.last_time_token_refreshed = datetime.datetime.now()
-            
+
             return self
         else:
             raise TgtgAPIError(response.status_code, response.content)
@@ -503,7 +509,7 @@ class TgtgClient:
             return response.json()
         else:
             raise TgtgAPIError(response.status_code, response.content)
-        
+
     def get_payment_paypal_url(self, payment_id: str):
         self.login()
         time.sleep(2)
